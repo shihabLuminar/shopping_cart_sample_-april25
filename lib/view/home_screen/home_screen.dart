@@ -17,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
         await context.read<HomeScreenController>().getCategories();
+        await context.read<HomeScreenController>().getAllProducts();
       },
     );
     super.initState();
@@ -150,7 +151,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         (index) => Padding(
                           padding: const EdgeInsets.all(5.0),
                           child: InkWell(
-                            onTap: () {
+                            onTap: () async {
+                              await context
+                                  .read<HomeScreenController>()
+                                  .getAllProducts(
+                                      category: homeScreenProvider
+                                          .categories[index].slug);
                               _scrollToSelectedIndex(index);
                             },
                             child: Container(
@@ -177,62 +183,76 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 16,
                 ),
                 Expanded(
-                    child: GridView.builder(
-                  itemCount: 100,
-                  padding: EdgeInsets.all(20),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 15,
-                    crossAxisSpacing: 15,
-                    mainAxisExtent: 250,
-                  ),
-                  itemBuilder: (context, index) => InkWell(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProductDetailsScreen(),
-                          ));
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(15),
-                          height: 200,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.grey.withOpacity(.2),
-                              image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: NetworkImage(
-                                      "https://images.pexels.com/photos/28518049/pexels-photo-28518049/free-photo-of-winter-wonderland-by-a-frozen-river.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"))),
-                          alignment: Alignment.topRight,
-                          child: Container(
-                            height: 45,
-                            width: 45,
-                            decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(.7),
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Icon(
-                              Icons.favorite_outline,
-                              size: 30,
+                    child: homeScreenProvider.isProductsLoading
+                        ? Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : GridView.builder(
+                            itemCount: homeScreenProvider.productsList.length,
+                            padding: EdgeInsets.all(20),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 15,
+                              crossAxisSpacing: 15,
+                              mainAxisExtent: 250,
                             ),
-                          ),
-                        ),
-                        Text(
-                          maxLines: 1,
-                          "title",
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18),
-                        ),
-                        Text("price".toString()),
-                      ],
-                    ),
-                  ),
-                ))
+                            itemBuilder: (context, index) => InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProductDetailsScreen(),
+                                    ));
+                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(15),
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.grey.withOpacity(.2),
+                                        image: DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: NetworkImage(
+                                                homeScreenProvider
+                                                    .productsList[index]
+                                                    .thumbnail
+                                                    .toString()))),
+                                    alignment: Alignment.topRight,
+                                    child: Container(
+                                      height: 45,
+                                      width: 45,
+                                      decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(.7),
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                      child: Icon(
+                                        Icons.favorite_outline,
+                                        size: 30,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    maxLines: 1,
+                                    homeScreenProvider.productsList[index].title
+                                        .toString(),
+                                    style: TextStyle(
+                                        overflow: TextOverflow.ellipsis,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18),
+                                  ),
+                                  Text(
+                                    "\$ ${homeScreenProvider.productsList[index].price.toString()}",
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ))
               ],
             ),
     );
