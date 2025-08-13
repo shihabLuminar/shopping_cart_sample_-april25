@@ -1,74 +1,40 @@
 // To parse this JSON data, do
 //
-//     final productsResModel = productsResModelFromJson(jsonString);
+//     final productDetailsResModel = productDetailsResModelFromJson(jsonString);
 
 import 'dart:convert';
 
-ProductsResModel productsResModelFromJson(String str) =>
-    ProductsResModel.fromJson(json.decode(str));
+ProductDetailsResModel productDetailsResModelFromJson(String str) =>
+    ProductDetailsResModel.fromJson(json.decode(str));
 
-String productsResModelToJson(ProductsResModel data) =>
+String productDetailsResModelToJson(ProductDetailsResModel data) =>
     json.encode(data.toJson());
 
-class ProductsResModel {
-  List<Product>? products;
-  num? total;
-  num? skip;
-  num? limit;
-
-  ProductsResModel({
-    this.products,
-    this.total,
-    this.skip,
-    this.limit,
-  });
-
-  factory ProductsResModel.fromJson(Map<String, dynamic> json) =>
-      ProductsResModel(
-        products: json["products"] == null
-            ? []
-            : List<Product>.from(
-                json["products"]!.map((x) => Product.fromJson(x))),
-        total: json["total"],
-        skip: json["skip"],
-        limit: json["limit"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "products": products == null
-            ? []
-            : List<dynamic>.from(products!.map((x) => x.toJson())),
-        "total": total,
-        "skip": skip,
-        "limit": limit,
-      };
-}
-
-class Product {
-  num? id;
+class ProductDetailsResModel {
+  int? id;
   String? title;
   String? description;
   String? category;
-  num? price;
-  num? discountPercentage;
-  num? rating;
-  num? stock;
+  double? price;
+  double? discountPercentage;
+  double? rating;
+  int? stock;
   List<String>? tags;
   String? brand;
   String? sku;
-  num? weight;
+  int? weight;
   Dimensions? dimensions;
   String? warrantyInformation;
   String? shippingInformation;
   String? availabilityStatus;
   List<Review>? reviews;
   String? returnPolicy;
-  num? minimumOrderQuantity;
+  int? minimumOrderQuantity;
   Meta? meta;
   List<String>? images;
   String? thumbnail;
 
-  Product({
+  ProductDetailsResModel({
     this.id,
     this.title,
     this.description,
@@ -93,7 +59,8 @@ class Product {
     this.thumbnail,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) => Product(
+  factory ProductDetailsResModel.fromJson(Map<String, dynamic> json) =>
+      ProductDetailsResModel(
         id: json["id"],
         title: json["title"],
         description: json["description"],
@@ -157,9 +124,9 @@ class Product {
 }
 
 class Dimensions {
-  num? width;
-  num? height;
-  num? depth;
+  double? width;
+  double? height;
+  double? depth;
 
   Dimensions({
     this.width,
@@ -168,9 +135,9 @@ class Dimensions {
   });
 
   factory Dimensions.fromJson(Map<String, dynamic> json) => Dimensions(
-        width: json["width"],
-        height: json["height"],
-        depth: json["depth"],
+        width: json["width"]?.toDouble(),
+        height: json["height"]?.toDouble(),
+        depth: json["depth"]?.toDouble(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -213,7 +180,7 @@ class Meta {
 }
 
 class Review {
-  num? rating;
+  int? rating;
   String? comment;
   DateTime? date;
   String? reviewerName;

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shopping_cart_may/controller/product_details_controller.dart';
 import 'package:shopping_cart_may/view/cart_screen/cart_screen.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
-  const ProductDetailsScreen({super.key});
+  const ProductDetailsScreen({
+    super.key,
+  });
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -10,10 +14,15 @@ class ProductDetailsScreen extends StatefulWidget {
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   @override
-  void initState() {}
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {},
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final productProvider = context.watch<ProductDetailsController>();
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -62,8 +71,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         borderRadius: BorderRadius.circular(10),
                         image: DecorationImage(
                             fit: BoxFit.cover,
-                            image: NetworkImage(
-                                "https://images.pexels.com/photos/28518049/pexels-photo-28518049/free-photo-of-winter-wonderland-by-a-frozen-river.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"))),
+                            image: NetworkImage(context
+                                    .watch<ProductDetailsController>()
+                                    .productDetails
+                                    ?.thumbnail
+                                    .toString() ??
+                                ""))),
                     child: Container(
                       decoration: BoxDecoration(
                           color: Colors.white,
@@ -82,7 +95,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                   Text(
-                    "title",
+                    productProvider.productDetails?.title.toString() ?? "",
                     style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
@@ -98,7 +111,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                   SizedBox(height: 20),
                   Text(
-                    "description",
+                    productProvider.productDetails?.description.toString() ??
+                        "",
                     style: TextStyle(
                         color: Colors.grey,
                         fontWeight: FontWeight.normal,
