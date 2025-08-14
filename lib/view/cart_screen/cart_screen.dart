@@ -1,44 +1,157 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_cart_may/view/cart_screen/widgets/cart_item_widget.dart';
+import 'package:provider/provider.dart';
+import 'package:shopping_cart_may/controller/cart_controller.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({super.key});
-
   @override
-  State<CartScreen> createState() => _CartScreenState();
+  _CartScreenState createState() => _CartScreenState();
 }
 
 class _CartScreenState extends State<CartScreen> {
-  @override
-  void initState() {
-    super.initState();
+  double get totalPrice {
+    var cartItems = context.read<CartController>().cartItems;
+    return cartItems.fold(0,
+        (sum, item) => sum + (item['price'] as double) * (item['qty'] as int));
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("My Cart"),
-        ),
-        body: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ListView.separated(
-                itemBuilder: (context, index) {
-                  return CartItemWidget(
-                    title: "title",
-                    desc: "desc",
-                    qty: "qty",
-                    image:
-                        "https://images.pexels.com/photos/28518049/pexels-photo-28518049/free-photo-of-winter-wonderland-by-a-frozen-river.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-                    onIncrement: () {},
-                    onDecrement: () {},
-                    onRemove: () {},
-                  );
-                },
-                separatorBuilder: (context, index) => SizedBox(height: 15),
-                itemCount: 2)),
+    final cartProvider = context.watch<CartController>();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('My Cart'),
+        backgroundColor: Colors.teal,
+        centerTitle: true,
       ),
+      body: cartProvider.cartItems.isEmpty
+          ? Center(
+              child: Text(
+                'Your cart is empty',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              ),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.all(12),
+                    itemCount: cartProvider.cartItems.length,
+                    itemBuilder: (context, index) {
+                      final item = cartProvider.cartItems[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  item['img'],
+                                  height: 80,
+                                  width: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['title'],
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      "\$${item['price'].toStringAsFixed(2)}",
+                                      style: TextStyle(
+                                          fontSize: 15, color: Colors.teal),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon:
+                                              Icon(Icons.remove_circle_outline),
+                                          onPressed: () {},
+                                          color: Colors.grey[700],
+                                        ),
+                                        Text(
+                                          '${item['qty']}',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.add_circle_outline),
+                                          onPressed: () {},
+                                          color: Colors.teal,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {},
+                              )
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        offset: Offset(0, -1),
+                        blurRadius: 5,
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Total: \$${totalPrice.toStringAsFixed(2)}",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () {
+                          // Checkout logic here
+                        },
+                        child: Text(
+                          "Checkout",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
     );
   }
 }
