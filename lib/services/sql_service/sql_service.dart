@@ -34,4 +34,8 @@ class SqlService {
   static Future<void> deleteData(int productId) async {
     await database.delete("cart", where: 'id = ?', whereArgs: [productId]);
   }
+
+  static Future<void> clearCart() async {
+    await database.delete("cart");
+  }
 }

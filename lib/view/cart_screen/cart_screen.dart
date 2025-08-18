@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shopping_cart_may/controller/cart_controller.dart';
+import 'package:shopping_cart_may/view/home_screen/home_screen.dart';
 
 class CartScreen extends StatefulWidget {
   @override
@@ -8,10 +10,14 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  double get totalPrice {
-    var cartItems = context.read<CartController>().cartItems;
-    return cartItems.fold(0,
-        (sum, item) => sum + (item['price'] as double) * (item['qty'] as int));
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        await context.read<CartController>().getCartItems();
+      },
+    );
+    super.initState();
   }
 
   @override
@@ -80,7 +86,14 @@ class _CartScreenState extends State<CartScreen> {
                                         IconButton(
                                           icon:
                                               Icon(Icons.remove_circle_outline),
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            context
+                                                .read<CartController>()
+                                                .decrementQty(
+                                                  pdId: item['id'],
+                                                  currentQty: item['qty'],
+                                                );
+                                          },
                                           color: Colors.grey[700],
                                         ),
                                         Text(
@@ -89,7 +102,14 @@ class _CartScreenState extends State<CartScreen> {
                                         ),
                                         IconButton(
                                           icon: Icon(Icons.add_circle_outline),
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            context
+                                                .read<CartController>()
+                                                .incrementQty(
+                                                  pdId: item['id'],
+                                                  currentQty: item['qty'],
+                                                );
+                                          },
                                           color: Colors.teal,
                                         ),
                                       ],
@@ -99,7 +119,11 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                               IconButton(
                                 icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {},
+                                onPressed: () {
+                                  context.read<CartController>().deleteProduct(
+                                        pdId: item['id'],
+                                      );
+                                },
                               )
                             ],
                           ),
@@ -124,7 +148,7 @@ class _CartScreenState extends State<CartScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Total: \$${totalPrice.toStringAsFixed(2)}",
+                        "Total: \$${cartProvider.totalPrice.toStringAsFixed(2)}",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -140,7 +164,30 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         onPressed: () {
-                          // Checkout logic here
+                          Razorpay razorpay = Razorpay();
+                          var options = {
+                            'key': 'rzp_test_1DP5mmOlF5G5ag',
+                            'amount': cartProvider.totalPrice * 100,
+                            'name': 'Acme Corp.',
+                            'description': 'Fine T-Shirt',
+                            'retry': {'enabled': true, 'max_count': 1},
+                            'send_sms_hash': true,
+                            'prefill': {
+                              'contact': '8888888888',
+                              'email': 'test@razorpay.com'
+                            },
+                            'external': {
+                              'wallets': ['paytm']
+                            }
+                          };
+
+                          razorpay.on(Razorpay.EVENT_PAYMENT_ERROR,
+                              handlePaymentErrorResponse);
+                          razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS,
+                              handlePaymentSuccessResponse);
+                          razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET,
+                              handleExternalWalletSelected);
+                          razorpay.open(options);
                         },
                         child: Text(
                           "Checkout",
@@ -152,6 +199,55 @@ class _CartScreenState extends State<CartScreen> {
                 )
               ],
             ),
+    );
+  }
+
+  void handlePaymentErrorResponse(PaymentFailureResponse response) {
+    /*
+    * PaymentFailureResponse contains three values:
+    * 1. Error Code
+    * 2. Error Description
+    * 3. Metadata
+    * */
+    showAlertDialog(context, "Payment Failed",
+        "Code: ${response.code}\nDescription: ${response.message}\nMetadata:${response.error.toString()}");
+  }
+
+  void handlePaymentSuccessResponse(PaymentSuccessResponse response) {
+    context.read<CartController>().clearCart();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeScreen(),
+      ),
+      (route) => false,
+    );
+    showAlertDialog(
+        context, "Payment Successful", "Payment ID: ${response.paymentId}");
+  }
+
+  void handleExternalWalletSelected(ExternalWalletResponse response) {
+    showAlertDialog(
+        context, "External Wallet Selected", "${response.walletName}");
+  }
+
+  void showAlertDialog(BuildContext context, String title, String message) {
+    // set up the buttons
+    Widget continueButton = ElevatedButton(
+      child: const Text("Continue"),
+      onPressed: () {},
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text(title),
+      content: Text(message),
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
     );
   }
 }
